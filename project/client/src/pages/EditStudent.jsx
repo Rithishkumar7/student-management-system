@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import StudentContext from '../context/StudentContext'
@@ -9,33 +9,41 @@ import Alert from '../components/ui/Alert'
 const EditStudent = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { getStudentById, updateStudent, loading, error } = useContext(StudentContext)
+  const { getStudentById, updateStudent, error } = useContext(StudentContext)
   const [student, setStudent] = useState(null)
   const [notFound, setNotFound] = useState(false)
-  
-  useEffect(() => {
-    const fetchStudent = async () => {
-      const data = await getStudentById(id)
-      if (data) {
-        setStudent(data)
-      } else {
-        setNotFound(true)
-      }
+  const [loading, setLoading] = useState(true)
+  const [updating, setUpdating] = useState(false)
+
+  const fetchStudent = useCallback(async () => {
+    setLoading(true)
+    const data = await getStudentById(id)
+    if (data) {
+      setStudent(data)
+      setNotFound(false)
+    } else {
+      setNotFound(true)
     }
-    
-    fetchStudent()
+    setLoading(false)
   }, [id, getStudentById])
-  
+
+  useEffect(() => {
+    fetchStudent()
+  }, [fetchStudent])
+
   const handleSubmit = async (formData) => {
+    setUpdating(true)
     try {
       await updateStudent(id, formData)
       toast.success('Student updated successfully')
       navigate('/students')
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error updating student')
+    } finally {
+      setUpdating(false)
     }
   }
-  
+
   if (notFound) {
     return (
       <div className="page-container">
@@ -54,16 +62,16 @@ const EditStudent = () => {
       </div>
     )
   }
-  
+
   return (
     <div className="page-container">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Edit Student</h1>
         <p className="text-gray-600">Update student information</p>
       </div>
-      
+
       <div className="card">
-        {loading ? (
+        {(loading || updating) ? (
           <div className="flex justify-center p-8">
             <Spinner size="large" />
           </div>
