@@ -20,7 +20,8 @@ app.use(cors());
 
 // Set Cache-Control headers for API responses to prevent caching issues
 app.use('/api', (req, res, next) => {
-  res.set('Cache-Control', 'no-store');
+  // Use no-cache and must-revalidate instead of no-store
+  res.set('Cache-Control', 'no-cache, must-revalidate');
   next();
 });
 
