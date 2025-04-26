@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
-import { toast } from 'react-toastify'
-import { FaSave, FaTimes } from 'react-icons/fa'
+// d:\project\project\client\src\components\students\StudentForm.jsx
+import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import { FaSave, FaTimes } from 'react-icons/fa';
 
-const currentYear = new Date().getFullYear()
-const yearRange = Array.from({ length: currentYear - 1999 }, (_, i) => 2000 + i)
+const currentYear = new Date().getFullYear();
+// Corrected year range calculation (inclusive of currentYear)
+const yearRange = Array.from({ length: currentYear - 2000 + 1 }, (_, i) => 2000 + i).reverse(); // Often makes sense to show recent years first
 
 const StudentForm = ({ student, onSubmit, buttonText = 'Submit' }) => {
   const [formData, setFormData] = useState({
@@ -14,126 +16,20 @@ const StudentForm = ({ student, onSubmit, buttonText = 'Submit' }) => {
     dob: '',
     department: '',
     enrollmentYear: currentYear,
-    isActive: true
-  })
-  
-  const [errors, setErrors] = useState({})
-  
+    isActive: true,
+  });
+
+  const [errors, setErrors] = useState({});
+
+  // --- MODIFIED useEffect ---
   useEffect(() => {
+    // This effect now runs only when the 'student' prop object itself changes.
     if (student) {
-      // Format date for input
-      const formattedDate = student.dob 
-        ? new Date(student.dob).toISOString().split('T')[0] 
-        : ''
-      
-      // Only update formData if student prop differs from current formData
-      if (
-        student.studentId !== formData.studentId ||
-        student.firstName !== formData.firstName ||
-        student.lastName !== formData.lastName ||
-        student.email !== formData.email ||
-        formattedDate !== formData.dob ||
-        student.department !== formData.department ||
-        student.enrollmentYear !== formData.enrollmentYear ||
-        (student.isActive !== undefined ? student.isActive : true) !== formData.isActive
-      ) {
-        setFormData({
-          studentId: student.studentId || '',
-          firstName: student.firstName || '',
-          lastName: student.lastName || '',
-          email: student.email || '',
-          dob: formattedDate,
-          department: student.department || '',
-          enrollmentYear: student.enrollmentYear || currentYear,
-          isActive: student.isActive !== undefined ? student.isActive : true
-        })
-      }
-    }
-  }, [student, formData])
-  
-  const validateForm = () => {
-    const newErrors = {}
-    
-    if (!formData.studentId.trim()) {
-      newErrors.studentId = 'Student ID is required'
-    } else if (!/^[a-zA-Z0-9]+$/.test(formData.studentId)) {
-      newErrors.studentId = 'Student ID must be alphanumeric'
-    }
-    
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required'
-    } else if (formData.firstName.trim().length < 2) {
-      newErrors.firstName = 'First name must be at least 2 characters'
-    }
-    
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required'
-    } else if (formData.lastName.trim().length < 2) {
-      newErrors.lastName = 'Last name must be at least 2 characters'
-    }
-    
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required'
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = 'Email is invalid'
-    }
-    
-    if (!formData.dob) {
-      newErrors.dob = 'Date of birth is required'
-    }
-    
-    if (!formData.department.trim()) {
-      newErrors.department = 'Department is required'
-    }
-    
-    if (!formData.enrollmentYear) {
-      newErrors.enrollmentYear = 'Enrollment year is required'
-    } else if (formData.enrollmentYear < 2000 || formData.enrollmentYear > currentYear) {
-      newErrors.enrollmentYear = `Year must be between 2000 and ${currentYear}`
-    }
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-  
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
-    
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value
-    })
-    
-    // Clear error when field is edited
-    if (errors[name]) {
-      setErrors({
-        ...errors,
-        [name]: ''
-      })
-    }
-  }
-  
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    
-    if (validateForm()) {
-      try {
-        onSubmit(formData)
-      } catch (error) {
-        toast.error('Error submitting form: ' + error.message)
-      }
-    } else {
-      toast.error('Please fix the errors in the form')
-    }
-  }
-  
-  const handleReset = () => {
-    if (student) {
-      // Reset to original student data
-      const formattedDate = student.dob 
-        ? new Date(student.dob).toISOString().split('T')[0] 
-        : ''
-        
+      // Format date for input ('YYYY-MM-DD')
+      const formattedDate = student.dob
+        ? new Date(student.dob).toISOString().split('T')[0]
+        : '';
+
       setFormData({
         studentId: student.studentId || '',
         firstName: student.firstName || '',
@@ -142,10 +38,13 @@ const StudentForm = ({ student, onSubmit, buttonText = 'Submit' }) => {
         dob: formattedDate,
         department: student.department || '',
         enrollmentYear: student.enrollmentYear || currentYear,
-        isActive: student.isActive !== undefined ? student.isActive : true
-      })
+        // Ensure isActive defaults correctly if undefined/null in the student data
+        isActive: student.isActive !== undefined && student.isActive !== null ? student.isActive : true,
+      });
+      // Reset errors when new student data is loaded or form is reset
+      setErrors({});
     } else {
-      // Reset to empty form
+      // Optional: Reset form if student prop becomes null/undefined (e.g., for AddStudent)
       setFormData({
         studentId: '',
         firstName: '',
@@ -154,14 +53,140 @@ const StudentForm = ({ student, onSubmit, buttonText = 'Submit' }) => {
         dob: '',
         department: '',
         enrollmentYear: currentYear,
-        isActive: true
-      })
+        isActive: true,
+      });
+      setErrors({});
     }
-    setErrors({})
-  }
-  
+    // --- Only depend on the student prop ---
+  }, [student]);
+  // --- END MODIFIED useEffect ---
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.studentId.trim()) {
+      newErrors.studentId = 'Student ID is required';
+    } else if (!/^[a-zA-Z0-9]+$/.test(formData.studentId)) {
+      newErrors.studentId = 'Student ID must be alphanumeric';
+    }
+
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+    } else if (formData.firstName.trim().length < 2) {
+      newErrors.firstName = 'First name must be at least 2 characters';
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
+    } else if (formData.lastName.trim().length < 2) {
+      newErrors.lastName = 'Last name must be at least 2 characters';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+
+    if (!formData.dob) {
+      newErrors.dob = 'Date of birth is required';
+    } else {
+        // Optional: Add date validation (e.g., not in the future)
+        const dobDate = new Date(formData.dob);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time part for accurate comparison
+        if (dobDate > today) {
+            newErrors.dob = 'Date of birth cannot be in the future';
+        }
+    }
+
+    if (!formData.department.trim()) {
+      newErrors.department = 'Department is required';
+    }
+
+    if (!formData.enrollmentYear) {
+      newErrors.enrollmentYear = 'Enrollment year is required';
+    } else if (formData.enrollmentYear < 2000 || formData.enrollmentYear > currentYear) {
+      newErrors.enrollmentYear = `Year must be between 2000 and ${currentYear}`;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+
+    // Clear error when field is edited
+    if (errors[name]) {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        [name]: '',
+      }));
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (validateForm()) {
+      try {
+        // Make sure to send isActive as boolean
+        onSubmit({ ...formData, isActive: Boolean(formData.isActive) });
+      } catch (error) {
+        // This catch might be redundant if onSubmit handles its own errors,
+        // but good as a fallback.
+        console.error("Error during onSubmit call:", error);
+        toast.error('Error submitting form: ' + (error.message || 'Unknown error'));
+      }
+    } else {
+      toast.error('Please fix the errors in the form');
+    }
+  };
+
+  const handleReset = () => {
+    // Re-trigger the useEffect logic by temporarily setting student to null
+    // This avoids duplicating the reset logic.
+    // Note: This approach works but might feel slightly indirect.
+    // Alternatively, duplicate the reset logic from useEffect here.
+    if (student) {
+        const formattedDate = student.dob
+            ? new Date(student.dob).toISOString().split('T')[0]
+            : '';
+        setFormData({
+            studentId: student.studentId || '',
+            firstName: student.firstName || '',
+            lastName: student.lastName || '',
+            email: student.email || '',
+            dob: formattedDate,
+            department: student.department || '',
+            enrollmentYear: student.enrollmentYear || currentYear,
+            isActive: student.isActive !== undefined && student.isActive !== null ? student.isActive : true,
+        });
+    } else {
+        setFormData({
+            studentId: '',
+            firstName: '',
+            lastName: '',
+            email: '',
+            dob: '',
+            department: '',
+            enrollmentYear: currentYear,
+            isActive: true,
+        });
+    }
+    setErrors({});
+    toast.info('Form reset');
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* --- Form Fields (No changes needed here) --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="form-group">
           <label htmlFor="studentId" className="form-label">
@@ -176,12 +201,15 @@ const StudentForm = ({ student, onSubmit, buttonText = 'Submit' }) => {
             onChange={handleChange}
             className={`form-input ${errors.studentId ? 'border-danger-500' : ''}`}
             placeholder="Enter student ID"
+            // Disable studentId field if editing an existing student
+            disabled={!!student}
+            aria-disabled={!!student}
           />
           {errors.studentId && (
             <p className="mt-1 text-sm text-danger-500">{errors.studentId}</p>
           )}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="firstName" className="form-label">
             First Name
@@ -200,7 +228,7 @@ const StudentForm = ({ student, onSubmit, buttonText = 'Submit' }) => {
             <p className="mt-1 text-sm text-danger-500">{errors.firstName}</p>
           )}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="lastName" className="form-label">
             Last Name
@@ -219,7 +247,7 @@ const StudentForm = ({ student, onSubmit, buttonText = 'Submit' }) => {
             <p className="mt-1 text-sm text-danger-500">{errors.lastName}</p>
           )}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="email" className="form-label">
             Email
@@ -238,7 +266,7 @@ const StudentForm = ({ student, onSubmit, buttonText = 'Submit' }) => {
             <p className="mt-1 text-sm text-danger-500">{errors.email}</p>
           )}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="dob" className="form-label">
             Date of Birth
@@ -256,7 +284,7 @@ const StudentForm = ({ student, onSubmit, buttonText = 'Submit' }) => {
             <p className="mt-1 text-sm text-danger-500">{errors.dob}</p>
           )}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="department" className="form-label">
             Department
@@ -275,7 +303,7 @@ const StudentForm = ({ student, onSubmit, buttonText = 'Submit' }) => {
             <p className="mt-1 text-sm text-danger-500">{errors.department}</p>
           )}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="enrollmentYear" className="form-label">
             Enrollment Year
@@ -288,6 +316,8 @@ const StudentForm = ({ student, onSubmit, buttonText = 'Submit' }) => {
             onChange={handleChange}
             className={`form-input ${errors.enrollmentYear ? 'border-danger-500' : ''}`}
           >
+            {/* Add a default disabled option */}
+            <option value="" disabled>Select year</option>
             {yearRange.map(year => (
               <option key={year} value={year}>
                 {year}
@@ -298,8 +328,8 @@ const StudentForm = ({ student, onSubmit, buttonText = 'Submit' }) => {
             <p className="mt-1 text-sm text-danger-500">{errors.enrollmentYear}</p>
           )}
         </div>
-        
-        <div className="form-group flex items-center mt-6">
+
+        <div className="form-group flex items-center mt-6 md:mt-8"> {/* Adjusted margin for alignment */}
           <input
             type="checkbox"
             id="isActive"
@@ -313,12 +343,15 @@ const StudentForm = ({ student, onSubmit, buttonText = 'Submit' }) => {
           </label>
         </div>
       </div>
-      
-      <div className="flex justify-end space-x-4">
+      {/* --- END Form Fields --- */}
+
+      <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200"> {/* Added padding and border */}
         <button
           type="button"
           onClick={handleReset}
           className="btn btn-secondary flex items-center"
+          // Disable reset if it's not an edit form (no initial student data)
+          // disabled={!student}
         >
           <FaTimes className="mr-2" /> Reset
         </button>
@@ -327,7 +360,7 @@ const StudentForm = ({ student, onSubmit, buttonText = 'Submit' }) => {
         </button>
       </div>
     </form>
-  )
-}
+  );
+};
 
-export default StudentForm
+export default StudentForm;
