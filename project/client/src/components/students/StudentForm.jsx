@@ -25,19 +25,31 @@ const StudentForm = ({ student, onSubmit, buttonText = 'Submit' }) => {
       const formattedDate = student.dob 
         ? new Date(student.dob).toISOString().split('T')[0] 
         : ''
-        
-      setFormData({
-        studentId: student.studentId || '',
-        firstName: student.firstName || '',
-        lastName: student.lastName || '',
-        email: student.email || '',
-        dob: formattedDate,
-        department: student.department || '',
-        enrollmentYear: student.enrollmentYear || currentYear,
-        isActive: student.isActive !== undefined ? student.isActive : true
-      })
+      
+      // Only update formData if student prop differs from current formData
+      if (
+        student.studentId !== formData.studentId ||
+        student.firstName !== formData.firstName ||
+        student.lastName !== formData.lastName ||
+        student.email !== formData.email ||
+        formattedDate !== formData.dob ||
+        student.department !== formData.department ||
+        student.enrollmentYear !== formData.enrollmentYear ||
+        (student.isActive !== undefined ? student.isActive : true) !== formData.isActive
+      ) {
+        setFormData({
+          studentId: student.studentId || '',
+          firstName: student.firstName || '',
+          lastName: student.lastName || '',
+          email: student.email || '',
+          dob: formattedDate,
+          department: student.department || '',
+          enrollmentYear: student.enrollmentYear || currentYear,
+          isActive: student.isActive !== undefined ? student.isActive : true
+        })
+      }
     }
-  }, [student])
+  }, [student, formData])
   
   const validateForm = () => {
     const newErrors = {}
