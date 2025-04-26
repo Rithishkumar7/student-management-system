@@ -18,6 +18,12 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(cors());
 
+// Set Cache-Control headers for API responses to prevent caching issues
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
 // Logging in development mode
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
