@@ -17,14 +17,20 @@ const EditStudent = () => {
 
   const fetchStudent = useCallback(async () => {
     setLoading(true)
-    const data = await getStudentById(id)
-    if (data) {
-      setStudent(data)
-      setNotFound(false)
-    } else {
+    try {
+      const data = await getStudentById(id)
+      if (data) {
+        setStudent(data)
+        setNotFound(false)
+      } else {
+        setNotFound(true)
+      }
+    } catch (error) {
       setNotFound(true)
+      console.error('Error fetching student in EditStudent:', error)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [id, getStudentById])
 
   useEffect(() => {
