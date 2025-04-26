@@ -39,7 +39,6 @@ export const StudentProvider = ({ children }) => {
     setLoadingGetById(true)
     try {
       const response = await axios.get(`${apiUrl}/${id}`)
-      setStudent(response.data)
       setErrorGetById(null)
       return response.data
     } catch (err) {
