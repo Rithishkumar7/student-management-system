@@ -6,11 +6,19 @@ const StudentContext = createContext()
 export const StudentProvider = ({ children }) => {
   const [students, setStudents] = useState([])
   const [student, setStudent] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  
+
+  // Separate loading and error states for getStudentById
+  const [loadingGetById, setLoadingGetById] = useState(false)
+  const [errorGetById, setErrorGetById] = useState(null)
+
+  // Separate loading and error states for updateStudent
+  const [loadingUpdate, setLoadingUpdate] = useState(false)
+  const [errorUpdate, setErrorUpdate] = useState(null)
+
   const apiUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/students` : '/api/students'
-  
+
   // Get all students
   const getStudents = async () => {
     setLoading(true)
@@ -25,24 +33,24 @@ export const StudentProvider = ({ children }) => {
       setLoading(false)
     }
   }
-  
+
   // Get student by id
   const getStudentById = async (id) => {
-    setLoading(true)
+    setLoadingGetById(true)
     try {
       const response = await axios.get(`${apiUrl}/${id}`)
       setStudent(response.data)
-      setError(null)
+      setErrorGetById(null)
       return response.data
     } catch (err) {
-      setError(err.response?.data?.message || 'Error fetching student')
+      setErrorGetById(err.response?.data?.message || 'Error fetching student')
       console.error('Error fetching student:', err)
       return null
     } finally {
-      setLoading(false)
+      setLoadingGetById(false)
     }
   }
-  
+
   // Add student
   const addStudent = async (studentData) => {
     setLoading(true)
@@ -59,26 +67,26 @@ export const StudentProvider = ({ children }) => {
       setLoading(false)
     }
   }
-  
+
   // Update student
   const updateStudent = async (id, studentData) => {
-    setLoading(true)
+    setLoadingUpdate(true)
     try {
       const response = await axios.put(`${apiUrl}/${id}`, studentData)
-      setStudents(prevStudents => prevStudents.map(student => 
+      setStudents(prevStudents => prevStudents.map(student =>
         student._id === id ? response.data : student
       ))
-      setError(null)
+      setErrorUpdate(null)
       return response.data
     } catch (err) {
-      setError(err.response?.data?.message || 'Error updating student')
+      setErrorUpdate(err.response?.data?.message || 'Error updating student')
       console.error('Error updating student:', err)
       throw err
     } finally {
-      setLoading(false)
+      setLoadingUpdate(false)
     }
   }
-  
+
   // Delete student
   const deleteStudent = async (id) => {
     setLoading(true)
