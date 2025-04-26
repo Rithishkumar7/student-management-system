@@ -48,7 +48,7 @@ export const StudentProvider = ({ children }) => {
     setLoading(true)
     try {
       const response = await axios.post(apiUrl, studentData)
-      setStudents([...students, response.data])
+      setStudents(prevStudents => [...prevStudents, response.data])
       setError(null)
       return response.data
     } catch (err) {
@@ -84,7 +84,7 @@ export const StudentProvider = ({ children }) => {
     setLoading(true)
     try {
       await axios.delete(`${apiUrl}/${id}`)
-      setStudents(students.filter(student => student._id !== id))
+      setStudents(prevStudents => prevStudents.filter(student => student._id !== id))
       setError(null)
       return true
     } catch (err) {
