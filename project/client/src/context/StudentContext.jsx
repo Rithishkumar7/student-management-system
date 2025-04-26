@@ -9,7 +9,7 @@ export const StudentProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   
-  const apiUrl = '/api/students'
+  const apiUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/students` : '/api/students'
   
   // Get all students
   const getStudents = async () => {
@@ -65,7 +65,7 @@ export const StudentProvider = ({ children }) => {
     setLoading(true)
     try {
       const response = await axios.put(`${apiUrl}/${id}`, studentData)
-      setStudents(students.map(student => 
+      setStudents(prevStudents => prevStudents.map(student => 
         student._id === id ? response.data : student
       ))
       setError(null)
